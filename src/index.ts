@@ -20,8 +20,8 @@ import {MetaMaskInpageProvider, RequestArguments} from '@metamask/providers'
 export type Request = (params: RequestArguments) => Promise<unknown | null>
 export type GetSnapsResponse = Record<string, Snap>
 
-// const defaultSnapOrigin = 'local:http://localhost:8080'
-const defaultSnapOrigin = 'npm:@greymass/test-snap'
+const defaultSnapOrigin = 'local:http://localhost:8080'
+// const defaultSnapOrigin = 'npm:@greymass/test-snap'
 
 export class WalletPluginMetaMask extends AbstractWalletPlugin implements WalletPlugin {
     public id = 'wallet-plugin-metamask'
