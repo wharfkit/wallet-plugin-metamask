@@ -36,7 +36,7 @@
         "@typescript-eslint/eslint-plugin": "^5.20.0",
         "@typescript-eslint/parser": "^5.20.0",
         "@wharfkit/mock-data": "^1.2.0",
-        "@wharfkit/session": "^1.1.0-rcfinal",
+        "@wharfkit/session": "^1.4.0-rc3",
         "chai": "^4.3.4",
         "eslint": "^8.13.0",
         "eslint-config-prettier": "^8.1.0",
