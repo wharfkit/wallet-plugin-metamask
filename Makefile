@@ -1,4 +1,4 @@
-SHELL := /bin/bash
+SHELL := /usr/bin/env bash
 SRC_FILES := $(shell find src -name '*.ts')
 TEST_FILES := $(shell find test/tests -name '*.ts')
 BIN := ./node_modules/.bin
