@@ -5,6 +5,7 @@ import {
     Checksum256,
     Checksum256Type,
     LoginContext,
+    PermissionLevel,
     PublicKey,
     ResolvedSigningRequest,
     Signature,
@@ -16,9 +17,15 @@ import {
 } from '@wharfkit/session'
 import {checkIsFlask, getSnapsProvider, InvokeSnapParams, Snap} from './metamask'
 import {MetaMaskInpageProvider, RequestArguments} from '@metamask/providers'
+import {AccountCreator} from '@greymass/create-account'
 
 export type Request = (params: RequestArguments) => Promise<unknown | null>
 export type GetSnapsResponse = Record<string, Snap>
+
+interface AccountFound {
+    actor: string
+    permission: string
+}
 
 const defaultSnapOrigin = 'local:http://localhost:8080'
 // const defaultSnapOrigin = 'npm:@greymass/test-snap'
@@ -27,7 +34,7 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
     public id = 'wallet-plugin-metamask'
     readonly config: WalletPluginConfig = {
         requiresChainSelect: true,
-        requiresPermissionSelect: true,
+        requiresPermissionSelect: false,
     }
     readonly metadata: WalletPluginMetadata = WalletPluginMetadata.from({
         name: 'MetaMask',
@@ -44,25 +51,99 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
         })
     }
 
+    async getPermissionLevel(context: LoginContext, chain: Checksum256): Promise<PermissionLevel> {
+        if (context.permissionLevel) {
+            return context.permissionLevel
+        }
+
+        const publicKey = await this.retrievePublicKey(chain)
+
+        const response = await fetch(`https://eosio.greymass.com/lookup/${publicKey}`)
+        const accounts = await response.json()
+
+        console.log({accounts})
+
+        if (!context.ui) {
+            throw new Error('UI not found')
+        }
+
+        return new Promise((resolve) => {
+            function createAccount() {
+                console.log('Create Account')
+                console.log({
+                    supportedChains: context.chains.map((chain) => chain.id),
+                    creationServiceUrl: `https://adding-login-through-apple.account-creation-portal.pages.dev/buy?owner_key=${publicKey}&active_key=${publicKey}`,
+                    scope: context.appName || 'Antelope App',
+                })
+                const accountCreator = new AccountCreator({
+                    supportedChains: context.chains.map((chain) => chain.id),
+                    creationServiceUrl: `https://adding-login-through-apple.account-creation-portal.pages.dev/buy?owner_key=${publicKey}&active_key=${publicKey}`,
+                    scope: context.appName || 'Antelope App',
+                })
+                accountCreator.createAccount().then((accountCreationResponse) => {
+                    console.log({accountCreationResponse})
+                    if ('sa' in accountCreationResponse) {
+                        resolve(
+                            PermissionLevel.from({
+                                actor: accountCreationResponse.sa,
+                                permission: accountCreationResponse.sp,
+                            })
+                        )
+                    } else {
+                        throw new Error(accountCreationResponse.error || 'Account creation failed')
+                    }
+                })
+            }
+            context.ui.prompt({
+                title: accounts.length ? 'Select an account' : 'No accounts found',
+                body: '',
+                elements: [
+                    ...accounts.map((accountFound: AccountFound) => ({
+                        type: 'button',
+                        label: `${accountFound.actor}@${accountFound.permission}`,
+                        data: {
+                            label: `${accountFound.actor}@${accountFound.permission}`,
+                            onclick: () => {
+                                resolve(
+                                    PermissionLevel.from({
+                                        actor: accountFound.actor,
+                                        permission: accountFound.permission,
+                                    })
+                                )
+                            },
+                        },
+                    })),
+                    {
+                        type: 'button',
+                        label: 'Create Account',
+                        data: {
+                            label: 'Create Account',
+                            onClick: createAccount,
+                        },
+                    },
+                ],
+            })
+        })
+    }
+
     async metamaskLogin(context: LoginContext): Promise<WalletPluginLoginResponse> {
         await this.initialize()
         if (!this.provider) {
             throw new Error('Metamask not found')
         }
+
         let chain: Checksum256
         if (context.chain) {
             chain = context.chain.id
         } else {
             chain = context.chains[0].id
         }
-        if (!context.permissionLevel) {
-            throw new Error(
-                'Calling login() without a permissionLevel is not supported by the WalletPluginMetaMask plugin.'
-            )
-        }
+
+        const permissionLevel = await this.getPermissionLevel(context, chain)
+
         return {
             chain,
-            permissionLevel: context.permissionLevel,
+            permissionLevel,
         }
     }
 
