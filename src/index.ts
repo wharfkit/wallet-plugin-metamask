@@ -2,7 +2,7 @@ import {
     AbstractWalletPlugin,
     cancelable,
     Cancelable,
-    Checksum256,
+    ChainDefinition,
     Checksum256Type,
     LoginContext,
     PermissionLevel,
@@ -27,8 +27,16 @@ interface AccountFound {
     permission: string
 }
 
-const defaultSnapOrigin = 'local:http://localhost:8080'
-// const defaultSnapOrigin = 'npm:@greymass/test-snap'
+interface AccountLookup {
+    accounts: AccountFound[]
+    chainId: Checksum256Type
+}
+
+const DEFAULT_SNAP_ORIGIN = 'local:http://localhost:8080'
+// const DEFAULT_SNAP_ORIGIN = 'npm:@greymass/test-snap'
+const ACCOUNT_CREATION_SERVICE_URL = 'http://localhost:5174/buy'
+// const ACCOUNT_CREATION_SERVICE_URL = 'https://adding-login-through-apple.account-creation-portal.pages.dev/buy'
+const ACCOUNT_LOOKUP_URL = 'https://eosio.greymass.com'
 
 export class WalletPluginMetaMask extends AbstractWalletPlugin implements WalletPlugin {
     public id = 'wallet-plugin-metamask'
@@ -51,15 +59,38 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
         })
     }
 
-    async getPermissionLevel(context: LoginContext, chain: Checksum256): Promise<PermissionLevel> {
+    async lookupAccounts(publicKey: PublicKey, chainId: Checksum256Type): Promise<AccountFound[]> {
+        try {
+            const response = await fetch(
+                `${ACCOUNT_LOOKUP_URL}/lookup/${publicKey.toLegacyString()}?includeTestnets=true`
+            )
+            const accountsByNetwork: AccountLookup[] = await response.json()
+
+            const networkAccount = accountsByNetwork.find(
+                (networkAccount: AccountLookup) => networkAccount.chainId === String(chainId)
+            )
+
+            if (!networkAccount) {
+                return []
+            }
+
+            return networkAccount.accounts
+        } catch (error) {
+            console.error('Error looking up accounts', error)
+            throw error
+        }
+    }
+
+    async getPermissionLevel(
+        context: LoginContext,
+        chain: ChainDefinition
+    ): Promise<PermissionLevel> {
         if (context.permissionLevel) {
             return context.permissionLevel
         }
 
-        const publicKey = await this.retrievePublicKey(chain)
-
-        const response = await fetch(`https://eosio.greymass.com/lookup/${publicKey}`)
-        const accounts = await response.json()
+        const publicKey = await this.retrievePublicKey(chain.id)
+        const accounts = await this.lookupAccounts(publicKey, chain.id)
 
         if (!context.ui) {
             throw new Error('UI not found')
@@ -67,9 +98,16 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
 
         return new Promise((resolve) => {
             function createAccount() {
+                const qs = new URLSearchParams()
+                qs.set('supported_chains', String(chain))
+                if (context.appName) {
+                    qs.set('scope', String(context.appName))
+                }
+                qs.set('owner_key', String(publicKey))
+                qs.set('active_key', String(publicKey))
                 const accountCreator = new AccountCreator({
-                    supportedChains: context.chains.map((chain) => chain.id),
-                    creationServiceUrl: `https://adding-login-through-apple.account-creation-portal.pages.dev/buy?owner_key=${publicKey}&active_key=${publicKey}`,
+                    supportedChains: [String(chain.id)],
+                    fullCreationServiceUrl: `${ACCOUNT_CREATION_SERVICE_URL}?${qs.toString()}`,
                     scope: context.appName || 'Antelope App',
                 })
                 accountCreator.createAccount().then((accountCreationResponse) => {
@@ -89,21 +127,25 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
                 title: accounts.length ? 'Select an account' : 'No accounts found',
                 body: '',
                 elements: [
-                    ...accounts.map((accountFound: AccountFound) => ({
-                        type: 'button',
-                        label: `${accountFound.actor}@${accountFound.permission}`,
-                        data: {
+                    ...accounts
+                        .filter((account) => {
+                            return account.permission !== 'owner'
+                        })
+                        .map((accountFound: AccountFound) => ({
+                            type: 'button' as const,
                             label: `${accountFound.actor}@${accountFound.permission}`,
-                            onclick: () => {
-                                resolve(
-                                    PermissionLevel.from({
-                                        actor: accountFound.actor,
-                                        permission: accountFound.permission,
-                                    })
-                                )
+                            data: {
+                                label: `${accountFound.actor}@${accountFound.permission}`,
+                                onClick: () => {
+                                    resolve(
+                                        PermissionLevel.from({
+                                            actor: accountFound.actor,
+                                            permission: accountFound.permission,
+                                        })
+                                    )
+                                },
                             },
-                        },
-                    })),
+                        })),
                     {
                         type: 'button',
                         label: 'Create Account',
@@ -123,17 +165,17 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
             throw new Error('Metamask not found')
         }
 
-        let chain: Checksum256
+        let chain: ChainDefinition
         if (context.chain) {
-            chain = context.chain.id
+            chain = context.chain
         } else {
-            chain = context.chains[0].id
+            chain = context.chains[0]
         }
 
         const permissionLevel = await this.getPermissionLevel(context, chain)
 
         return {
-            chain,
+            chain: chain.id,
             permissionLevel,
         }
     }
@@ -211,11 +253,11 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
             method: 'wallet_getSnaps',
             params: {},
         })) as GetSnapsResponse
-        this.installedSnap = snaps[defaultSnapOrigin] ?? null
+        this.installedSnap = snaps[DEFAULT_SNAP_ORIGIN] ?? null
     }
 
     async requestSnap(id?: string, version?: string) {
-        const snapId = id || defaultSnapOrigin
+        const snapId = id || DEFAULT_SNAP_ORIGIN
         const snaps = (await this.request({
             method: 'wallet_requestSnaps',
             params: {
@@ -226,7 +268,7 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
     }
 
     async invokeSnap({method, params}: InvokeSnapParams, id?: string) {
-        const snapId = id || defaultSnapOrigin
+        const snapId = id || DEFAULT_SNAP_ORIGIN
         return this.request({
             method: 'wallet_invokeSnap',
             params: {snapId, request: {method, params}},
