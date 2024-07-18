@@ -1,5 +1,3 @@
-/// <reference path="./global.d.ts" />
-
 import type {EIP6963AnnounceProviderEvent, MetaMaskInpageProvider} from '@metamask/providers'
 
 export type Snap = {

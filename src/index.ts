@@ -61,27 +61,18 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
         const response = await fetch(`https://eosio.greymass.com/lookup/${publicKey}`)
         const accounts = await response.json()
 
-        console.log({accounts})
-
         if (!context.ui) {
             throw new Error('UI not found')
         }
 
         return new Promise((resolve) => {
             function createAccount() {
-                console.log('Create Account')
-                console.log({
-                    supportedChains: context.chains.map((chain) => chain.id),
-                    creationServiceUrl: `https://adding-login-through-apple.account-creation-portal.pages.dev/buy?owner_key=${publicKey}&active_key=${publicKey}`,
-                    scope: context.appName || 'Antelope App',
-                })
                 const accountCreator = new AccountCreator({
                     supportedChains: context.chains.map((chain) => chain.id),
                     creationServiceUrl: `https://adding-login-through-apple.account-creation-portal.pages.dev/buy?owner_key=${publicKey}&active_key=${publicKey}`,
                     scope: context.appName || 'Antelope App',
                 })
                 accountCreator.createAccount().then((accountCreationResponse) => {
-                    console.log({accountCreationResponse})
                     if ('sa' in accountCreationResponse) {
                         resolve(
                             PermissionLevel.from({
