@@ -16,7 +16,7 @@
         "prepare": "make"
     },
     "dependencies": {
-        "@greymass/create-account": "git+https://github.com/greymass/create-account.git#b4b4c61942ce955f7f87d9ab64f29bfd8922aa40",
+        "@greymass/create-account": "^1.0.2",
         "@metamask/providers": "^17.0.0",
         "tslib": "^2.1.0"
     },
