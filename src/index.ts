@@ -34,7 +34,8 @@ interface AccountLookup {
 
 const DEFAULT_SNAP_ORIGIN = 'local:http://localhost:8080'
 // const DEFAULT_SNAP_ORIGIN = 'npm:@greymass/test-snap'
-const ACCOUNT_CREATION_SERVICE_URL = 'http://localhost:5174/buy'
+const ACCOUNT_CREATION_SERVICE_URL =
+    'https://adding-login-through-apple.account-creation-portal.pages.dev/buy'
 // const ACCOUNT_CREATION_SERVICE_URL = 'https://adding-login-through-apple.account-creation-portal.pages.dev/buy'
 const ACCOUNT_LOOKUP_URL = 'https://eosio.greymass.com'
 
@@ -89,22 +90,29 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
             return context.permissionLevel
         }
 
-        const publicKey = await this.retrievePublicKey(chain.id)
-        const accounts = await this.lookupAccounts(publicKey, chain.id)
+        const activeKey = await this.retrievePublicKey(chain.id, 1)
+        console.log({activeKey: String(activeKey)})
+        const accounts = await this.lookupAccounts(activeKey, chain.id)
 
         if (!context.ui) {
             throw new Error('UI not found')
         }
 
         return new Promise((resolve) => {
-            function createAccount() {
+            const createAccount = async () => {
+                // Changed to arrow function
                 const qs = new URLSearchParams()
                 qs.set('supported_chains', String(chain))
                 if (context.appName) {
                     qs.set('scope', String(context.appName))
                 }
-                qs.set('owner_key', String(publicKey))
-                qs.set('active_key', String(publicKey))
+
+                const ownerKey = await this.retrievePublicKey(chain.id, 0)
+
+                console.log({ownerKey: String(ownerKey)})
+
+                qs.set('owner_key', String(ownerKey))
+                qs.set('active_key', String(activeKey))
                 const accountCreator = new AccountCreator({
                     supportedChains: [String(chain.id)],
                     fullCreationServiceUrl: `${ACCOUNT_CREATION_SERVICE_URL}?${qs.toString()}`,
@@ -123,6 +131,7 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
                     }
                 })
             }
+
             context.ui.prompt({
                 title: accounts.length ? 'Select an account' : 'No accounts found',
                 body: '',
@@ -204,14 +213,14 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
         }
     }
 
-    async retrievePublicKey(chainId: Checksum256Type): Promise<PublicKey> {
+    async retrievePublicKey(chainId: Checksum256Type, addressIndex = 0): Promise<PublicKey> {
         await this.initialize()
         if (!this.provider) {
             throw new Error('Metamask not found')
         }
         const result = (await this.invokeSnap({
             method: 'antelope_getPublicKey',
-            params: {chainId: String(chainId)},
+            params: {chainId: String(chainId), addressIndex},
         })) as string
         return PublicKey.from(result)
     }
