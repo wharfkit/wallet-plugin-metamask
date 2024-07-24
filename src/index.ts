@@ -61,25 +61,20 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
     }
 
     async lookupAccounts(publicKey: PublicKey, chainId: Checksum256Type): Promise<AccountFound[]> {
-        try {
-            const response = await fetch(
-                `${ACCOUNT_LOOKUP_URL}/lookup/${publicKey.toLegacyString()}?includeTestnets=true`
-            )
-            const accountsByNetwork: AccountLookup[] = await response.json()
+        const response = await fetch(
+            `${ACCOUNT_LOOKUP_URL}/lookup/${publicKey.toLegacyString()}?includeTestnets=true`
+        )
+        const accountsByNetwork: AccountLookup[] = await response.json()
 
-            const networkAccount = accountsByNetwork.find(
-                (networkAccount: AccountLookup) => networkAccount.chainId === String(chainId)
-            )
+        const networkAccount = accountsByNetwork.find(
+            (networkAccount: AccountLookup) => networkAccount.chainId === String(chainId)
+        )
 
-            if (!networkAccount) {
-                return []
-            }
-
-            return networkAccount.accounts
-        } catch (error) {
-            console.error('Error looking up accounts', error)
-            throw error
+        if (!networkAccount) {
+            return []
         }
+
+        return networkAccount.accounts
     }
 
     async getPermissionLevel(
@@ -91,7 +86,6 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
         }
 
         const activeKey = await this.retrievePublicKey(chain.id, 1)
-        console.log({activeKey: String(activeKey)})
         const accounts = await this.lookupAccounts(activeKey, chain.id)
 
         if (!context.ui) {
@@ -108,8 +102,6 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
                 }
 
                 const ownerKey = await this.retrievePublicKey(chain.id, 0)
-
-                console.log({ownerKey: String(ownerKey)})
 
                 qs.set('owner_key', String(ownerKey))
                 qs.set('active_key', String(activeKey))
