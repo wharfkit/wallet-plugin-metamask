@@ -22,11 +22,17 @@ export type GetSnapsResponse = Record<string, Snap>
 
 export * from './metamask'
 
+interface WalletPluginMetaMaskConfig {
+    snapOrigin?: string
+}
+
 const defaultSnapOrigin = 'local:http://localhost:8080'
 // const defaultSnapOrigin = 'npm:@greymass/test-snap'
 
 export class WalletPluginMetaMask extends AbstractWalletPlugin implements WalletPlugin {
     public id = 'wallet-plugin-metamask'
+    public snapOrigin: string
+
     readonly config: WalletPluginConfig = {
         requiresChainSelect: true,
         requiresPermissionSelect: true,
@@ -38,6 +44,12 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
         homepage: '',
         download: '',
     })
+
+    constructor(walletPluginMetaMaskConfig?: WalletPluginMetaMaskConfig) {
+        super()
+
+        this.snapOrigin = walletPluginMetaMaskConfig?.snapOrigin || defaultSnapOrigin
+    }
 
     login(context: LoginContext): Cancelable<WalletPluginLoginResponse> {
         const promise = this.metamaskLogin(context)
