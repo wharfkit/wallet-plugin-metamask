@@ -20,6 +20,8 @@ import {MetaMaskInpageProvider, RequestArguments} from '@metamask/providers'
 export type Request = (params: RequestArguments) => Promise<unknown | null>
 export type GetSnapsResponse = Record<string, Snap>
 
+export * from './metamask'
+
 const defaultSnapOrigin = 'local:http://localhost:8080'
 // const defaultSnapOrigin = 'npm:@greymass/test-snap'
 
