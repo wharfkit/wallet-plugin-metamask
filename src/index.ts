@@ -31,7 +31,7 @@ const defaultSnapOrigin = 'local:http://localhost:8080'
 
 export class WalletPluginMetaMask extends AbstractWalletPlugin implements WalletPlugin {
     public id = 'wallet-plugin-metamask'
-    public snapOrigin: string
+    snapOrigin: string
 
     readonly config: WalletPluginConfig = {
         requiresChainSelect: true,
