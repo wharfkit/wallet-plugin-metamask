@@ -20,7 +20,7 @@
         "tslib": "^2.1.0"
     },
     "peerDependencies": {
-        "@wharfkit/session": "^1.2.7"
+        "@wharfkit/session": "^1.4.0"
     },
     "devDependencies": {
         "@rollup/plugin-alias": "^3.1.4",
@@ -36,7 +36,7 @@
         "@typescript-eslint/eslint-plugin": "^5.20.0",
         "@typescript-eslint/parser": "^5.20.0",
         "@wharfkit/mock-data": "^1.2.0",
-        "@wharfkit/session": "^1.2.7",
+        "@wharfkit/session": "^1.4.0",
         "chai": "^4.3.4",
         "eslint": "^8.13.0",
         "eslint-config-prettier": "^8.1.0",

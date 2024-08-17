@@ -801,7 +801,7 @@
     js-big-decimal "^2.0.7"
     tslib "^2.1.0"
 
-"@wharfkit/session@^1.2.7":
+"@wharfkit/session@^1.2.7", "@wharfkit/session@^1.4.0":
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/@wharfkit/session/-/session-1.4.0.tgz#13a44a0d23d5ee689755985580f943f869352987"
   integrity sha512-U+K9eWbYzFeDshYwgrhyNoF47kYToKFpTe6xFAwaJO+2w0kIkP0vtJFl7ygd06muh7Hu3K1BqrZ3j6+FyyuIyA==
