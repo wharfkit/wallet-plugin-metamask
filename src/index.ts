@@ -22,16 +22,18 @@ export type GetSnapsResponse = Record<string, Snap>
 
 export * from './metamask'
 
-interface WalletPluginMetaMaskConfig {
+export interface WalletPluginMetaMaskConfig {
     snapOrigin?: string
+    setupPageUrl?: string
 }
 
 const defaultSnapOrigin = 'local:http://localhost:8080'
-// const defaultSnapOrigin = 'npm:@greymass/test-snap'
+const defaultSetupPageUrl = 'https://unicove.com/eos/metamask'
 
 export class WalletPluginMetaMask extends AbstractWalletPlugin implements WalletPlugin {
     public id = 'wallet-plugin-metamask'
     public snapOrigin: string
+    public setupPageUrl: string
 
     readonly config: WalletPluginConfig = {
         requiresChainSelect: true,
@@ -49,6 +51,7 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
         super()
 
         this.snapOrigin = walletPluginMetaMaskConfig?.snapOrigin || defaultSnapOrigin
+        this.setupPageUrl = walletPluginMetaMaskConfig?.setupPageUrl || defaultSetupPageUrl
     }
 
     login(context: LoginContext): Cancelable<WalletPluginLoginResponse> {
@@ -59,7 +62,7 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
     }
 
     async metamaskLogin(context: LoginContext): Promise<WalletPluginLoginResponse> {
-        await this.initialize()
+        await this.initialize(context)
         if (!this.provider) {
             throw new Error('Metamask not found')
         }
@@ -132,7 +135,7 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
         return data
     }
 
-    async initialize() {
+    async initialize(context?: LoginContext) {
         if (!this.provider) {
             this.provider = await getSnapsProvider()
         }
@@ -140,10 +143,25 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
             this.isFlask = await checkIsFlask(this.provider)
             await this.setSnap()
             if (!this.installedSnap) {
-                await this.requestSnap()
-                if (this.installedSnap) {
-                    await this.initialize()
-                }
+                context?.ui?.prompt({
+                    title: 'Antelope Snap Setup Required',
+                    body: `
+                        It looks like the Antelope snap for MetaMask isn't installed yet. 
+    
+                        Click the button below to go to our setup page:
+                    `,
+                    elements: [
+                        {
+                            type: 'button',
+                            label: 'Go to Setup Page',
+                            data: {
+                                onClick: () => {
+                                    window.open(this.setupPageUrl, '_blank')
+                                },
+                            },
+                        },
+                    ],
+                })
             }
         }
     }
