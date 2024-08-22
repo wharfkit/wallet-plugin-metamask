@@ -7,14 +7,19 @@ import {
     mockSessionKitOptions,
 } from '@wharfkit/mock-data'
 
-import {WalletPluginTEMPLATE} from '$lib'
+import {WalletPluginMetaMask} from '$lib'
+import {setupEthereumMock} from './mocks/ethereum'
 
 suite('wallet plugin', function () {
+    setup(function () {
+        setupEthereumMock()
+    })
+
     test('login and sign', async function () {
         const kit = new SessionKit(
             {
                 ...mockSessionKitArgs,
-                walletPlugins: [new WalletPluginTEMPLATE()],
+                walletPlugins: [new WalletPluginMetaMask()],
             },
             mockSessionKitOptions
         )
