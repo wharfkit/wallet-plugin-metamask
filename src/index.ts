@@ -144,9 +144,23 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
             await this.setSnap()
             if (!this.installedSnap) {
                 context?.ui?.prompt({
-                    title: 'Snap not found',
-                    body: `Plese visit ${this.setupPageUrl} for help setting up the snap.`,
-                    elements: [],
+                    title: 'Antelope Snap Setup Required',
+                    body: `
+                        It looks like the Antelope snap for MetaMask isn't installed yet. 
+    
+                        Click the button below to go to our setup page:
+                    `,
+                    elements: [
+                        {
+                            type: 'button',
+                            label: 'Go to Setup Page',
+                            data: {
+                                onClick: () => {
+                                    window.open(this.setupPageUrl, '_blank')
+                                },
+                            },
+                        },
+                    ],
                 })
             }
         }
