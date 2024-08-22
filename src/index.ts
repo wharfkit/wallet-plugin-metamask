@@ -22,7 +22,7 @@ export type GetSnapsResponse = Record<string, Snap>
 
 export * from './metamask'
 
-interface WalletPluginMetaMaskConfig {
+export interface WalletPluginMetaMaskConfig {
     snapOrigin?: string
     setupPageUrl?: string
 }
