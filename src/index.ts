@@ -21,6 +21,7 @@ export type Request = (params: RequestArguments) => Promise<unknown | null>
 export type GetSnapsResponse = Record<string, Snap>
 
 export * from './metamask'
+export * from './snaps'
 
 export interface WalletPluginMetaMaskConfig {
     snapOrigin?: string
