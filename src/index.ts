@@ -28,7 +28,7 @@ export interface WalletPluginMetaMaskConfig {
     setupPageUrl?: string
 }
 
-const defaultSnapOrigin = 'local:http://localhost:8080'
+const defaultSnapOrigin = 'npm:@greymass/eos-wallet'
 const defaultSetupPageUrl = 'https://unicove.com/eos/metamask'
 
 export class WalletPluginMetaMask extends AbstractWalletPlugin implements WalletPlugin {
@@ -147,8 +147,8 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
                 context?.ui?.prompt({
                     title: 'Antelope Snap Setup Required',
                     body: `
-                        It looks like the Antelope snap for MetaMask isn't installed yet. 
-    
+                        It looks like the Antelope snap for MetaMask isn't installed yet.
+
                         Click the button below to go to our setup page:
                     `,
                     elements: [

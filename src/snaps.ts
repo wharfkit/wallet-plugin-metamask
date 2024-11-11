@@ -1,4 +1,4 @@
 export const snapOrigins = new Map([
-    ['eos', 'local:http://localhost:8080'],
-    ['jungle4', 'local:http://localhost:8080'],
+    ['eos', 'npm:@greymass/eos-wallet'],
+    ['jungle4', 'npm:@greymass/eos-wallet'],
 ])
