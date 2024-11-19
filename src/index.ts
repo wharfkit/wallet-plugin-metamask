@@ -142,6 +142,7 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
         }
         if (this.provider && !this.installedSnap) {
             this.isFlask = await checkIsFlask(this.provider)
+            await this.requestSnap()
             await this.setSnap()
             if (!this.installedSnap) {
                 context?.ui?.prompt({
