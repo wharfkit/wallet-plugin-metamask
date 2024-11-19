@@ -64,6 +64,7 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
 
     async metamaskLogin(context: LoginContext): Promise<WalletPluginLoginResponse> {
         await this.initialize(context)
+
         if (!this.provider) {
             throw new Error('Metamask not found')
         }
@@ -110,9 +111,6 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
 
     async retrievePublicKey(chainId: Checksum256Type): Promise<PublicKey> {
         await this.initialize()
-        if (!this.provider) {
-            throw new Error('Metamask not found')
-        }
         const result = (await this.invokeSnap({
             method: 'antelope_getPublicKey',
             params: {chainId: String(chainId)},
@@ -137,13 +135,18 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
     }
 
     async initialize(context?: LoginContext) {
-        if (!this.provider) {
-            this.provider = await getSnapsProvider()
-        }
-        if (this.provider && !this.installedSnap) {
+        try {
+            if (!this.provider) {
+                this.provider = await getSnapsProvider()
+            }
+            if (!this.provider) {
+                throw new Error('Metamask not found')
+            }
             this.isFlask = await checkIsFlask(this.provider)
-            await this.setSnap()
-            if (!this.installedSnap) {
+
+            await this.requestSnap()
+
+            if (this.provider && !this.installedSnap) {
                 context?.ui?.prompt({
                     title: 'Antelope Snap Setup Required',
                     body: `
@@ -164,6 +167,8 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
                     ],
                 })
             }
+        } catch (error) {
+            throw new Error((error as Error).message ?? 'Failed to initialize MetaMask')
         }
     }
 
