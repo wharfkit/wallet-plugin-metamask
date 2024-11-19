@@ -2,7 +2,6 @@ import {
     AbstractWalletPlugin,
     cancelable,
     Cancelable,
-    Chains,
     Checksum256,
     Checksum256Type,
     LoginContext,
