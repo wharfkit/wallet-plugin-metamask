@@ -165,7 +165,6 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
                 }
             }
         } catch (error) {
-            console.error(error)
             throw new Error((error as Error).message ?? 'Failed to initialize MetaMask')
         }
     }
