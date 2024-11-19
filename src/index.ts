@@ -64,6 +64,7 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
 
     async metamaskLogin(context: LoginContext): Promise<WalletPluginLoginResponse> {
         await this.initialize(context)
+
         if (!this.provider) {
             throw new Error('Metamask not found')
         }
@@ -110,9 +111,6 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
 
     async retrievePublicKey(chainId: Checksum256Type): Promise<PublicKey> {
         await this.initialize()
-        if (!this.provider) {
-            throw new Error('Metamask not found')
-        }
         const result = (await this.invokeSnap({
             method: 'antelope_getPublicKey',
             params: {chainId: String(chainId)},
@@ -137,34 +135,38 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
     }
 
     async initialize(context?: LoginContext) {
-        if (!this.provider) {
-            this.provider = await getSnapsProvider()
-        }
-        if (this.provider && !this.installedSnap) {
-            this.isFlask = await checkIsFlask(this.provider)
-            await this.requestSnap()
-            await this.setSnap()
-            if (!this.installedSnap) {
-                context?.ui?.prompt({
-                    title: 'Antelope Snap Setup Required',
-                    body: `
+        try {
+            if (!this.provider) {
+                this.provider = await getSnapsProvider()
+            }
+            if (this.provider && !this.installedSnap) {
+                this.isFlask = await checkIsFlask(this.provider)
+                await this.requestSnap()
+                if (!this.installedSnap) {
+                    context?.ui?.prompt({
+                        title: 'Antelope Snap Setup Required',
+                        body: `
                         It looks like the Antelope snap for MetaMask isn't installed yet.
 
                         Click the button below to go to our setup page:
                     `,
-                    elements: [
-                        {
-                            type: 'button',
-                            label: 'Go to Setup Page',
-                            data: {
-                                onClick: () => {
-                                    window.open(this.setupPageUrl, '_blank')
+                        elements: [
+                            {
+                                type: 'button',
+                                label: 'Go to Setup Page',
+                                data: {
+                                    onClick: () => {
+                                        window.open(this.setupPageUrl, '_blank')
+                                    },
                                 },
                             },
-                        },
-                    ],
-                })
+                        ],
+                    })
+                }
             }
+        } catch (error) {
+            console.error(error)
+            throw new Error((error as Error).message ?? 'Failed to initialize MetaMask')
         }
     }
 
