@@ -142,24 +142,8 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
             }
             this.isFlask = await checkIsFlask(this.provider)
 
-            try {
-                ;(await this.invokeSnap({
-                    method: 'antelope_getPublicKey',
-                    params: {chainId: String(context?.chain?.id || Chains.EOS.id)},
-                })) as string
-            } catch (error: unknown) {
-                if (
-                    typeof error === 'object' &&
-                    error !== null &&
-                    'code' in error &&
-                    (error as {code: number}).code === 4100
-                ) {
-                    // Unauthorized error, try requesting snap permissions
-                    await this.requestSnap()
-                } else {
-                    throw Error((error as Error).message ?? 'Failed to set snap')
-                }
-            }
+            await this.requestSnap()
+
             if (this.provider && !this.installedSnap) {
                 context?.ui?.prompt({
                     title: 'Antelope Snap Setup Required',
