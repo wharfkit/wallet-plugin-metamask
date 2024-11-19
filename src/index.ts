@@ -139,6 +139,9 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
             if (!this.provider) {
                 this.provider = await getSnapsProvider()
             }
+            if (!this.provider) {
+                throw new Error('Metamask not found')
+            }
             this.isFlask = await checkIsFlask(this.provider)
 
             await this.requestSnap()
