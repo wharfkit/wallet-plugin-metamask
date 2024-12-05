@@ -1,7 +1,7 @@
 {
     "name": "@wharfkit/wallet-plugin-metamask",
     "description": "A MetaMask plugin for use with @wharfkit/session.",
-    "version": "1.0.0-rc10",
+    "version": "1.0.0-rc11",
     "homepage": "https://github.com/wharfkit/wallet-plugin-metamask",
     "license": "BSD-3-Clause",
     "main": "lib/wallet-plugin-metamask.js",
