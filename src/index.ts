@@ -112,7 +112,7 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
     async retrievePublicKey(chainId: Checksum256Type): Promise<PublicKey> {
         await this.initialize()
         const result = (await this.invokeSnap({
-            method: 'antelope_getPublicKey',
+            method: 'antelope_getActivePublicKey',
             params: {chainId: String(chainId)},
         })) as string
         return PublicKey.from(result)
