@@ -183,11 +183,11 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
             method: 'wallet_getSnaps',
             params: {},
         })) as GetSnapsResponse
-        this.installedSnap = snaps[defaultSnapOrigin] ?? null
+        this.installedSnap = snaps[this.snapOrigin] ?? null
     }
 
     async requestSnap(id?: string, version?: string) {
-        const snapId = id || defaultSnapOrigin
+        const snapId = id || this.snapOrigin
         const snaps = (await this.request({
             method: 'wallet_requestSnaps',
             params: {
@@ -198,7 +198,7 @@ export class WalletPluginMetaMask extends AbstractWalletPlugin implements Wallet
     }
 
     async invokeSnap({method, params}: InvokeSnapParams, id?: string) {
-        const snapId = id || defaultSnapOrigin
+        const snapId = id || this.snapOrigin
         return this.request({
             method: 'wallet_invokeSnap',
             params: {snapId, request: {method, params}},
